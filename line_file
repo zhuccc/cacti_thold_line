@@ -1,0 +1,35 @@
+/* LINE訊息告警 */
+list($a,$b) = explode("Message:",$text['text']);
+$ttime=date("Y/m/d h:i:sa");
+if ($b != '') {
+    $content=trim("$b")."\n"."\n".$ttime;
+}else{
+    $content=$subject;
+}
+
+if ($data != '') {
+    $ffile = fopen("/tmp/qq.jpg","w+");
+    fwrite($ffile,$data);
+    fclose($ffile);
+    $linefields = array('message' => $content,
+                        'imageFile' => curl_file_create('/tmp/qq.jpg'));
+}else{
+    $linefields = array('message' => $content);
+}
+
+$ch = curl_init();
+$lineurl="https://notify-api.line.me/api/notify" ;
+$linehead=array("Content-Type: multipart/form-data",
+                "Authorization: Bearer your_line_token");
+curl_setopt($ch, CURLOPT_URL, $lineurl);
+curl_setopt($ch, CURLOPT_HEADER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, $linehead);
+curl_setopt($ch, CURLOPT_NOBODY, false);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $linefields);
+curl_exec($ch);
+curl_close($ch);
+if(file_exists('/tmp/qq.jpg')){
+    unlink('/tmp/qq.jpg');
+}
